@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Video Photo Editor</string>
+    <string name="placeholder">placeholder</string>
+    <string name="please_select_a_filter">please select a filter</string>
+    <string name="rv_image_preview">rv image preview</string>
+    <string name="documents">Documents</string>
+</resources>
