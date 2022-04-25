@@ -2,13 +2,15 @@ package com.mhirrr.videophotoeditor.presentation.document
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
+import android.os.Environment
 import android.view.LayoutInflater
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.material.textfield.TextInputEditText
 import com.mhirrr.videophotoeditor.R
+import com.mhirrr.videophotoeditor.data.local.models.EditedPhotosModel
 import com.mhirrr.videophotoeditor.databinding.ActivityDocumentsBinding
 import com.mhirrr.videophotoeditor.domain.EditedPhotosRepository
 import com.mhirrr.videophotoeditor.presentation.editor.EditingActivity
@@ -16,6 +18,7 @@ import com.mhirrr.videophotoeditor.utils.dataUtils.Resource
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.io.File
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -34,14 +37,19 @@ class DocumentsActivity : AppCompatActivity() {
         binding = ActivityDocumentsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        val viewModel: DocumentsViewModel by viewModels()
+
         binding.documentsRv.layoutManager = GridLayoutManager(applicationContext, 2)
         binding.documentsRv.adapter = adapter
 
         // initial state setup
         lifecycleScope.launchWhenStarted {
             delay(100)
-            editedPhotosRepository.getAllPhotos().collect { response ->
-                Log.d("HERE", response.toString())
+            viewModel.getAllDocuments()
+        }
+
+        lifecycleScope.launchWhenStarted {
+            viewModel.documents.collect { response ->
                 when (response) {
                     is Resource.Success -> {
                         adapter.documents = response.data!!
@@ -54,15 +62,10 @@ class DocumentsActivity : AppCompatActivity() {
         }
 
         adapter.setOnDocumentClickListener { document ->
-            val intent = Intent(this, EditingActivity::class.java)
-            intent.putExtra("image_name", document.fileName)
-            intent.putExtra("image_type", 2)
-            intent.putExtra("image_filGrpAdjusters", document.filterValue.toFloatArray())
-            intent.putExtra("image_id", document.id)
-            startActivity(intent)
+            editImage(document)
         }
 
-        adapter.setOnDocumentMenuClickListener { photo, option ->
+        adapter.setOnDocumentMenuClickListener { document, option ->
             when (option) {
                 0 -> {
                     val builder = android.app.AlertDialog.Builder(this)
@@ -77,28 +80,9 @@ class DocumentsActivity : AppCompatActivity() {
                         val newName =
                             inputLayout.findViewById<TextInputEditText>(R.id.ad_rename_input).text.toString()
 
-                        photo.name = newName
+                        document.name = newName
                         lifecycleScope.launch {
-                            editedPhotosRepository.addPhoto(photo).collect { addPhotoResponse ->
-                                Log.d("HERE IAM", addPhotoResponse.toString())
-                                when (addPhotoResponse) {
-                                    is Resource.Success -> {
-                                        editedPhotosRepository.getAllPhotos().collect { response ->
-                                            when (response) {
-                                                is Resource.Success -> {
-                                                    adapter.documents = response.data!!
-                                                }
-                                                else -> {
-
-                                                }
-                                            }
-                                        }
-                                    }
-                                    else -> {}
-                                }
-                            }
-
-
+                            viewModel.renameDocument(document)
                         }
 
                         dialog.dismiss()
@@ -110,13 +94,29 @@ class DocumentsActivity : AppCompatActivity() {
                     builder.show()
                 }
                 1 -> {
-
+                    editImage(document)
                 }
                 2 -> {
+                    val storageLoc =
+                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                    val editedPhotoFile = File(storageLoc, document.fileName)
 
+                    val intent = Intent(Intent.ACTION_SEND)
+                    intent.type = "image/png"
+                    intent.putExtra(Intent.EXTRA_STREAM, editedPhotoFile.toURI())
+                    startActivity(Intent.createChooser(intent, "Share Image"))
                 }
             }
 
         }
+    }
+
+    private fun editImage(document: EditedPhotosModel) {
+        val intent = Intent(this, EditingActivity::class.java)
+        intent.putExtra("image_name", document.fileName)
+        intent.putExtra("image_type", 2)
+        intent.putExtra("image_filGrpAdjusters", document.filterValue.toFloatArray())
+        intent.putExtra("image_id", document.id)
+        startActivity(intent)
     }
 }
