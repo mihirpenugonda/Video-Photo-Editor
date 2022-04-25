@@ -15,10 +15,12 @@ class IEditedPhotosRepository @Inject constructor(private val editedPhotosDao: E
 
     override suspend fun addPhoto(editedPhoto: EditedPhotosModel): Flow<Resource<Int>> = flow {
         try {
+            Log.d("HERE", editedPhoto.toString())
             editedPhotosDao.savePhoto(editedPhoto)
 
             emit(Resource.Success(1))
         } catch (e: Exception) {
+            Log.d("HEREAAA", e.printStackTrace().toString())
             emit(Resource.Error(e.stackTrace.toString()))
         }
     }
@@ -29,7 +31,7 @@ class IEditedPhotosRepository @Inject constructor(private val editedPhotosDao: E
             if (editedPhotos.isEmpty()) emit(Resource.Empty())
             else emit(Resource.Success(editedPhotos))
         } catch (e: Exception) {
-
+            Log.d("HERE", e.toString())
         }
     }
 

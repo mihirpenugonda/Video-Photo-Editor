@@ -61,6 +61,18 @@
             app:layout_constraintStart_toEndOf="@id/edit_filter_slider"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <Button
+            android:id="@+id/edit_filter_update"
+            android:layout_width="100dp"
+            android:visibility="invisible"
+            android:layout_height="wrap_content"
+            android:text="update"
+            android:layout_marginEnd="20dp"
+            android:textColor="@color/white"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/edit_filter_slider"
+            app:layout_constraintTop_toTopOf="parent" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.recyclerview.widget.RecyclerView

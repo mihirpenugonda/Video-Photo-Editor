@@ -49,23 +49,19 @@ class CameraActivity : AppCompatActivity() {
             )
         }
 
-        binding.cameraButton.setOnClickListener {
-            takePhoto()
-        }
+        binding.cameraButton.setOnClickListener { takePhoto() }
 
         binding.cameraSwitchButton.setOnClickListener {
-            cameraSelectorOption = !cameraSelectorOption
-            startCamera()
-        }
-
-        binding.cameraButton.setOnLongClickListener {
-            Toast.makeText(this, "on long click", Toast.LENGTH_SHORT).show()
-            true
+            cameraSelectorOption = !cameraSelectorOption; startCamera()
         }
 
         binding.documentButton.setOnClickListener {
-            val i = Intent(applicationContext, DocumentsActivity::class.java)
-            startActivity(i)
+            startActivity(
+                Intent(
+                    applicationContext,
+                    DocumentsActivity::class.java
+                )
+            )
         }
 
         binding.flashButton.setOnClickListener { torchState() }
@@ -75,7 +71,7 @@ class CameraActivity : AppCompatActivity() {
                 if (result.resultCode == RESULT_OK) {
                     val i = Intent(applicationContext, EditingActivity::class.java)
                     i.putExtra("image_uri", result.data?.data.toString())
-                    i.putExtra("is_gallery_image", true)
+                    i.putExtra("image_type", 1)
                     startActivity(i)
                 }
             }
@@ -129,10 +125,10 @@ class CameraActivity : AppCompatActivity() {
 
     private fun takePhoto() {
         val imageCapture = imageCapture ?: return
-
+        val imageName = System.currentTimeMillis().toString() + ".jpg"
         val photoFile = File(
             filesDir,
-            "temp" + ".jpg"
+            imageName
         )
 
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
@@ -143,8 +139,8 @@ class CameraActivity : AppCompatActivity() {
             object : ImageCapture.OnImageSavedCallback {
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                     val i = Intent(applicationContext, EditingActivity::class.java)
-                    i.putExtra("image_uri", outputFileResults.savedUri.toString())
-                    i.putExtra("is_gallery_image", false)
+                    i.putExtra("image_name", imageName)
+                    i.putExtra("image_type", 0)
                     startActivity(i)
                 }
 

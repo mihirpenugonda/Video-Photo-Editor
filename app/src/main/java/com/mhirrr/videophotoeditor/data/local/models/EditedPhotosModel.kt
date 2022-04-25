@@ -10,6 +10,7 @@ import com.mhirrr.videophotoeditor.data.local.converters.EditedPhotosConverter
 data class EditedPhotosModel(
 
     var name: String,
+    var fileName: String,
     var filterValue: List<Float>,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,

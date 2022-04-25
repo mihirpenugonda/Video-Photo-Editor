@@ -4,4 +4,5 @@
     <string name="please_select_a_filter">please select a filter</string>
     <string name="rv_image_preview">rv image preview</string>
     <string name="documents">Documents</string>
+    <string name="new_file_name">new file name</string>
 </resources>

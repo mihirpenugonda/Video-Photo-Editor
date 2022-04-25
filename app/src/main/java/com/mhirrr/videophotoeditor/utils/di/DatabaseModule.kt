@@ -17,7 +17,7 @@ class DatabaseModule {
     @Provides
     @Singleton
     fun provideRoomDatabase(@ApplicationContext applicationContext: Context): EditedPhotosDatabase {
-        return Room.databaseBuilder(applicationContext, EditedPhotosDatabase::class.java, "rtest").build()
+        return Room.databaseBuilder(applicationContext, EditedPhotosDatabase::class.java, "rtestt2232").build()
     }
 
 }

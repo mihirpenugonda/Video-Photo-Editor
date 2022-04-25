@@ -5,8 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.media.MediaScannerConnection
 import android.net.Uri
-import android.opengl.Visibility
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -35,6 +35,8 @@ class EditingActivity : AppCompatActivity() {
     private var filGrpAdjusters: MutableList<GPUImageFilterTools.FilterAdjuster>? = null
     private var filGrpAdjustersValue: MutableList<Float>? = null
 
+    private var fileName: String? = null
+
     private val slider by lazy {
         binding.editFilterSlider
     }
@@ -47,31 +49,6 @@ class EditingActivity : AppCompatActivity() {
         EditingFilterAdapter()
     }
 
-    // initializing filter and data for default values
-    init {
-        val filterGroup = GPUImageFilterGroup()
-        val filterGroupAdjusters: MutableList<GPUImageFilterTools.FilterAdjuster> = mutableListOf()
-        val filterGroupAdjustersValue: MutableList<Float> = mutableListOf()
-
-        Constants.Filters.forEach { filterType ->
-            val currentFilter =
-                GPUImageFilterTools.createFilterForType(this, filterType.first)
-            val currentFilterAdjustor = GPUImageFilterTools.FilterAdjuster(currentFilter)
-            val currentFilterDefaultVal = filterType.second
-
-            filterGroup.addFilter(currentFilter)
-            filterGroupAdjusters.add(currentFilterAdjustor)
-            filterGroupAdjustersValue.add(currentFilterDefaultVal)
-
-            currentFilterAdjustor.adjust(currentFilterDefaultVal.toInt())
-        }
-
-        filPosition = -1
-        filGrp = filterGroup
-        filGrpAdjusters = filterGroupAdjusters
-        filGrpAdjustersValue = filterGroupAdjustersValue
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityEditingBinding.inflate(layoutInflater)
@@ -80,13 +57,27 @@ class EditingActivity : AppCompatActivity() {
         // set image to surface
         lifecycleScope.launchWhenStarted {
             val imageUriString = intent.getStringExtra("image_uri")
-            val isGalleryImage = intent.getBooleanExtra("is_gallery_image", false)
+            val imageName = intent.getStringExtra("image_name")
+            val imageFilGrpAdjustersValue = intent.getFloatArrayExtra("image_filGrpAdjusters")
 
-            if (isGalleryImage) {
-                image.setImage(imageUriString!!.toUri())
-            } else {
-                val file = File(filesDir, "temp.jpg")
-                image.setImage(file)
+            when (intent.getIntExtra("image_type", 0)) {
+                0 -> {
+                    setUpData(true, null)
+                    fileName = imageName!!
+                    val file = File(filesDir, imageName)
+                    image.setImage(file)
+                }
+                1 -> {
+                    setUpData(true, null)
+                    image.setImage(imageUriString!!.toUri())
+                }
+                2 -> {
+
+                    setUpData(false, imageFilGrpAdjustersValue!!.toMutableList())
+                    fileName = imageName!!
+                    val file = File(filesDir, imageName)
+                    image.setImage(file)
+                }
             }
 
             image.filter = filGrp
@@ -110,6 +101,7 @@ class EditingActivity : AppCompatActivity() {
             }
         }
 
+        // setup recycler view
         adapter.setOnFilterClickListener { name, index ->
             if (filPosition != -1) {
                 val currentFilterValue = slider.value * 100
@@ -130,16 +122,31 @@ class EditingActivity : AppCompatActivity() {
         binding.editFilterList.layoutManager =
             LinearLayoutManager(this@EditingActivity, LinearLayoutManager.HORIZONTAL, false)
 
+        // slider on change listener
         slider.addOnChangeListener(Slider.OnChangeListener { _, value, _ ->
             filAdjuster?.adjust((value * 100).toInt())
             image.requestRender()
         })
 
-        binding.editFilterSave.setOnClickListener {
-            viewModel.saveImage(
-                image.gpuImage.bitmapWithFilterApplied,
-                filGrpAdjustersValue
-            )
+        // save button setup
+        if (intent.getIntExtra("image_type", -1) == 2) {
+            binding.editFilterSave.visibility = View.INVISIBLE
+            binding.editFilterUpdate.visibility = View.VISIBLE
+        } else {
+            binding.editFilterSave.setOnClickListener {
+                filGrpAdjustersValue!![filPosition!!] = slider.value * 100
+                viewModel.saveImage(
+                    image.gpuImage.bitmapWithFilterApplied,
+                    filGrpAdjustersValue,
+                    fileName!!
+                )
+            }
+        }
+
+        binding.editFilterUpdate.setOnClickListener {
+            val fileId = intent.getIntExtra("image_id", -1)
+            filGrpAdjustersValue!![filPosition!!] = slider.value * 100
+            viewModel.updateImage(image.gpuImage.bitmapWithFilterApplied, filGrpAdjustersValue, fileName!!, fileId)
         }
     }
 
@@ -149,5 +156,30 @@ class EditingActivity : AppCompatActivity() {
             context, arrayOf(file.toString()),
             null, null
         )
+    }
+
+    private fun setUpData(isNew: Boolean, adjusterValues: MutableList<Float>?) {
+        val filterGroup = GPUImageFilterGroup()
+        val filterGroupAdjusters: MutableList<GPUImageFilterTools.FilterAdjuster> = mutableListOf()
+        val filterGroupAdjustersValue: MutableList<Float> = mutableListOf()
+
+        Constants.Filters.forEachIndexed { index, filterType ->
+            val currentFilter =
+                GPUImageFilterTools.createFilterForType(this, filterType.first)
+            val currentFilterAdjustor = GPUImageFilterTools.FilterAdjuster(currentFilter)
+            val currentFilterDefaultVal = if (isNew) filterType.second else adjusterValues!![index]
+
+            currentFilterAdjustor.adjust(currentFilterDefaultVal.toInt())
+
+            filterGroup.addFilter(currentFilter)
+            filterGroupAdjusters.add(currentFilterAdjustor)
+            filterGroupAdjustersValue.add(currentFilterDefaultVal)
+
+        }
+
+        filPosition = -1
+        filGrp = filterGroup
+        filGrpAdjusters = filterGroupAdjusters
+        filGrpAdjustersValue = filterGroupAdjustersValue
     }
 }

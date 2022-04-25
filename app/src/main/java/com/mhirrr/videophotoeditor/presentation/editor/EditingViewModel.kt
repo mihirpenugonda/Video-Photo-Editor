@@ -3,6 +3,7 @@ package com.mhirrr.videophotoeditor.presentation.editor
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Environment
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mhirrr.videophotoeditor.data.local.models.EditedPhotosModel
@@ -25,19 +26,40 @@ class EditingViewModel @Inject constructor(private val editedPhotosRepository: E
     private val _saveImageState = MutableStateFlow<Resource<Uri>>(Resource.Empty())
     val saveImageState: StateFlow<Resource<Uri>> = _saveImageState
 
-    fun saveImage(bitmap: Bitmap, filGrpAdjustersValue: MutableList<Float>?) {
+    fun saveImage(bitmap: Bitmap, filGrpAdjustersValue: MutableList<Float>?, fileName: String) {
         val storageLoc =
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
 
-        val fileName = System.currentTimeMillis().toString() + ".jpg"
+        val file = File(storageLoc, fileName)
+        val newPhoto = EditedPhotosModel(fileName, fileName, filGrpAdjustersValue!!.toList())
+
+        saveImageToGallery(newPhoto, bitmap, file)
+    }
+
+    fun updateImage(
+        bitmap: Bitmap,
+        filGrpAdjustersValue: MutableList<Float>?,
+        fileName: String,
+        fileId: Int
+    ) {
+        val storageLoc =
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+
         val file = File(storageLoc, fileName)
 
+        file.delete()
+        val newPhoto =
+            EditedPhotosModel(fileName, fileName, filGrpAdjustersValue!!.toList(), fileId)
+
+        saveImageToGallery(newPhoto, bitmap, file)
+    }
+
+    private fun saveImageToGallery(newPhoto: EditedPhotosModel, bitmap: Bitmap, file: File) {
         try {
             val fos = FileOutputStream(file)
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos)
             fos.close()
 
-            val newPhoto = EditedPhotosModel(fileName, filGrpAdjustersValue!!.toList())
 
             viewModelScope.launch {
                 try {
@@ -53,8 +75,6 @@ class EditingViewModel @Inject constructor(private val editedPhotosRepository: E
         } catch (e: IOException) {
             _saveImageState.value = Resource.Error(e.printStackTrace().toString())
         }
-
-
     }
 
 
