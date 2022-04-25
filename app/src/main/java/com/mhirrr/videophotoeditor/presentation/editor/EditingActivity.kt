@@ -6,7 +6,6 @@ import android.content.Intent
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -134,7 +133,9 @@ class EditingActivity : AppCompatActivity() {
             binding.editFilterUpdate.visibility = View.VISIBLE
         } else {
             binding.editFilterSave.setOnClickListener {
-                filGrpAdjustersValue!![filPosition!!] = slider.value * 100
+                if (filPosition != -1) {
+                    filGrpAdjustersValue!![filPosition!!] = slider.value * 100
+                }
                 viewModel.saveImage(
                     image.gpuImage.bitmapWithFilterApplied,
                     filGrpAdjustersValue,
@@ -145,8 +146,15 @@ class EditingActivity : AppCompatActivity() {
 
         binding.editFilterUpdate.setOnClickListener {
             val fileId = intent.getIntExtra("image_id", -1)
-            filGrpAdjustersValue!![filPosition!!] = slider.value * 100
-            viewModel.updateImage(image.gpuImage.bitmapWithFilterApplied, filGrpAdjustersValue, fileName!!, fileId)
+            if (filPosition != -1) {
+                filGrpAdjustersValue!![filPosition!!] = slider.value * 100
+            }
+            viewModel.updateImage(
+                image.gpuImage.bitmapWithFilterApplied,
+                filGrpAdjustersValue,
+                fileName!!,
+                fileId
+            )
         }
     }
 

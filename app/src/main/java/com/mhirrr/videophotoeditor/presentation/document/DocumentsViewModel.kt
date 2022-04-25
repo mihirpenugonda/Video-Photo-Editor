@@ -36,12 +36,26 @@ class DocumentsViewModel @Inject constructor(private val editedPhotosRepository:
 
    fun renameDocument(document: EditedPhotosModel) {
         viewModelScope.launch {
-            editedPhotosRepository.addPhoto(document).collect { addPhotoResponse ->
-                when (addPhotoResponse) {
+            editedPhotosRepository.addPhoto(document).collect { response ->
+                when (response) {
                     is Resource.Success -> {
                         getAllDocuments()
                     }
                     else -> {}
+                }
+            }
+        }
+    }
+
+    fun deleteDocument(document_id: Int) {
+        viewModelScope.launch {
+            editedPhotosRepository.deletePhoto(document_id).collect { response ->
+                when(response) {
+                    is Resource.Success -> {
+                        getAllDocuments()
+                    } else -> {
+
+                    }
                 }
             }
         }

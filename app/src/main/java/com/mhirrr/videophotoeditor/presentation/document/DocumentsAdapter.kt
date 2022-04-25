@@ -48,7 +48,7 @@ class DocumentsAdapter :
             rvDocumentImagePreview.setImageURI(editedPhotoFile.toUri())
             rvDocumentImageName.text = editedPhoto.name
 
-            val arr = arrayOf("rename", "edit", "share")
+            val arr = arrayOf("rename", "edit", "share", "delete")
 
             rvDocumentMenu.setOnClickListener {
                 androidx.appcompat.app.AlertDialog.Builder(context!!)

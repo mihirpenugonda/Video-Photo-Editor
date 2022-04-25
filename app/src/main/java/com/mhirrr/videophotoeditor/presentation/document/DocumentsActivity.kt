@@ -12,32 +12,27 @@ import com.google.android.material.textfield.TextInputEditText
 import com.mhirrr.videophotoeditor.R
 import com.mhirrr.videophotoeditor.data.local.models.EditedPhotosModel
 import com.mhirrr.videophotoeditor.databinding.ActivityDocumentsBinding
-import com.mhirrr.videophotoeditor.domain.EditedPhotosRepository
 import com.mhirrr.videophotoeditor.presentation.editor.EditingActivity
 import com.mhirrr.videophotoeditor.utils.dataUtils.Resource
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class DocumentsActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDocumentsBinding
 
-    @Inject
-    lateinit var editedPhotosRepository: EditedPhotosRepository
-
     private val adapter by lazy {
         DocumentsAdapter()
     }
+
+    private val viewModel: DocumentsViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDocumentsBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        val viewModel: DocumentsViewModel by viewModels()
 
         binding.documentsRv.layoutManager = GridLayoutManager(applicationContext, 2)
         binding.documentsRv.adapter = adapter
@@ -106,6 +101,9 @@ class DocumentsActivity : AppCompatActivity() {
                     intent.putExtra(Intent.EXTRA_STREAM, editedPhotoFile.toURI())
                     startActivity(Intent.createChooser(intent, "Share Image"))
                 }
+                3 -> {
+                    viewModel.deleteDocument(document.id)
+                }
             }
 
         }
@@ -119,4 +117,10 @@ class DocumentsActivity : AppCompatActivity() {
         intent.putExtra("image_id", document.id)
         startActivity(intent)
     }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.getAllDocuments()
+    }
+
 }

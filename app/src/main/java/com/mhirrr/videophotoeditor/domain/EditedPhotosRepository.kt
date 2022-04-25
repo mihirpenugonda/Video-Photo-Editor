@@ -10,4 +10,6 @@ interface EditedPhotosRepository {
 
     suspend fun getAllPhotos(): Flow<Resource<List<EditedPhotosModel>>>
 
+    suspend fun deletePhoto(document_id: Int): Flow<Resource<Int>>
+
 }
