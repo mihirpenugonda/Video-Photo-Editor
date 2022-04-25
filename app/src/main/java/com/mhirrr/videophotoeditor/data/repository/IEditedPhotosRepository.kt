@@ -6,6 +6,7 @@ import com.mhirrr.videophotoeditor.data.local.models.EditedPhotosModel
 import com.mhirrr.videophotoeditor.domain.EditedPhotosRepository
 import com.mhirrr.videophotoeditor.utils.dataUtils.Resource
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
@@ -29,15 +30,6 @@ class IEditedPhotosRepository @Inject constructor(private val editedPhotosDao: E
             val editedPhotos = editedPhotosDao.getAllPhotos()
             if (editedPhotos.isEmpty()) emit(Resource.Empty())
             else emit(Resource.Success(editedPhotos))
-        } catch (e: Exception) {
-            Log.d("HERE", e.toString())
-        }
-    }
-
-    override suspend fun deletePhoto(document_id: Int): Flow<Resource<Int>> = flow {
-        try {
-            editedPhotosDao.deletePhoto(document_id)
-            emit(Resource.Success(1))
         } catch (e: Exception) {
             Log.d("HERE", e.toString())
         }

@@ -15,7 +15,4 @@ interface EditedPhotosDao {
     @Query("select * from editedphotosmodel")
     suspend fun getAllPhotos(): List<EditedPhotosModel>
 
-    @Query("delete from editedphotosmodel where id = :document_id")
-    suspend fun deletePhoto(document_id: Int)
-
 }
